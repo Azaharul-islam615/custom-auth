@@ -1,25 +1,44 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { Form, Input, Button, message } from "antd";
+import { MailOutlined, LockOutlined } from "@ant-design/icons";
 
+import { AuthProvider } from "../context/AuthContext";
+import UseAxiosSecure from "../hooks/UseAxiosSecure";
 
 const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { login } = useContext(AuthProvider);
+    const axiosSecure=UseAxiosSecure()
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (email && password) {
-            localStorage.setItem("isLoggedIn", "true");
-            navigate("/dashboard");
+    const handleLogin = async (values) => {
+        setLoading(true);
+        try {
+            const res = await axiosSecure.post(
+                "/api/auth/login",
+                {
+                    email: values.email,
+                    password: values.password,
+                },
+                { withCredentials: true }
+            );
+
+            const { accessToken, user } = res.data;
+            login(user, accessToken);
+            message.success("Login successful!");
+            navigate("/profile");
+        } catch (err) {
+            message.error(err.response?.data?.message || "Login failed");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
             <div className="bg-white p-12 rounded-2xl shadow-2xl w-full max-w-md">
-
-                {/* Header */}
+                
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-2 mb-4">
                         <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
@@ -38,48 +57,59 @@ const Login = () => {
                     </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleLogin}>
-                    {/* Email */}
-                    <div className="mb-2">
-                        <label className="block mb-2 text-gray-700 font-medium">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-emerald-600 transition"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    {/* Password */}
-                    <div className="mb-2">
-                        <label className="block mb-2 text-gray-700 font-medium">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            className="w-full px-3 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-emerald-600 transition"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    {/* Button */}
-                    <button
-                        type="submit"
-                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition"
+                {/* Ant Design Form */}
+                <Form
+                    name="login"
+                    onFinish={handleLogin}
+                    layout="vertical"
+                    requiredMark={false}
+                >
+                    <Form.Item
+                        label={<span className="text-gray-700 font-medium">Email</span>}
+                        name="email"
+                        rules={[
+                            { required: true, message: "Please enter your email" },
+                            { type: "email", message: "Please enter a valid email" },
+                        ]}
                     >
-                        Sign In
-                    </button>
-                </form>
+                        <Input
+                            prefix={<MailOutlined />}
+                            placeholder="Enter your email"
+                            size="large"
+                            className="rounded-lg"
+                        />
+                    </Form.Item>
 
-                {/* Signup */}
+                    <Form.Item
+                        label={<span className="text-gray-700 font-medium">Password</span>}
+                        name="password"
+                        rules={[
+                            { required: true, message: "Please enter your password" },
+                            { min: 6, message: "Password must be at least 6 characters" },
+                        ]}
+                    >
+                        <Input.Password
+                            prefix={<LockOutlined />}
+                            placeholder="Enter your password"
+                            size="large"
+                            className="rounded-lg"
+                        />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={loading}
+                            size="large"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700"
+                            style={{ backgroundColor: "#059669" }}
+                        >
+                            Sign In
+                        </Button>
+                    </Form.Item>
+                </Form>
+
                 <p className="text-center mt-6 text-gray-500">
                     Don't have an account?{" "}
                     <Link to={"/register"} className="text-emerald-600 font-semibold">
