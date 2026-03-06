@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect } from "react";
 
 const axiosSecure = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: "https://customauth-psi.vercel.app",
     withCredentials: true, // Important for cookies
 });
 
@@ -33,7 +33,7 @@ const UseAxiosSecure = () => {
                     try {
                         // Try to refresh token
                         const response = await axios.post(
-                            "http://localhost:3000/api/auth/refresh",
+                            "https://customauth-psi.vercel.app/api/auth/refresh",
                             {},
                             { withCredentials: true }
                         );
